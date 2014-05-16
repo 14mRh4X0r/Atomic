@@ -48,7 +48,9 @@ import indrora.atomic.receiver.ConversationReceiver;
 import indrora.atomic.receiver.ServerReceiver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
 import android.app.AlertDialog;
@@ -67,7 +69,6 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.speech.RecognizerIntent;
-import android.support.v4.view.PagerTitleStrip;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.text.InputType;
@@ -76,12 +77,14 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnKeyListener;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Adapter;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
@@ -89,8 +92,6 @@ import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
-import com.viewpagerindicator.PageIndicator;
-import com.viewpagerindicator.TitlePageIndicator;
 
 /**
  * The server view with a scrollable list of all channels
@@ -541,6 +542,30 @@ public class ConversationActivity extends SherlockActivity implements
 						.getUsersAsStringArray(
 								conversationForUserList.getName());
 
+				Arrays.sort(nicks, new Comparator<String>() {
+					public int compare(String lhs, String rhs) {
+						char lhsc = lhs.charAt(0);
+						char rhsc = rhs.charAt(0);
+						if (lhsc == '@') {
+							if (rhsc == '@') {
+								return lhs.substring(1).compareToIgnoreCase(rhs.substring(1));
+							} else {
+								return -1;
+							}
+						} else if (lhsc == '+') {
+							if (rhsc == '@') {
+								return 1;
+							} else if (rhsc == '+') {
+								return lhs.substring(1).compareToIgnoreCase(rhs.substring(1));
+							} else {
+								return -1;
+							}
+						} else {
+							return lhs.compareToIgnoreCase(rhs);
+						}
+					}
+				});
+
 				final Context _tContext = (Context) this;
 
 				AlertDialog.Builder userlistBuilder = new AlertDialog.Builder(
@@ -666,9 +691,9 @@ public class ConversationActivity extends SherlockActivity implements
 		case R.id.chooseConversation:
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle("Choose Conversation");
-			String[] conversationsArr = new String[pagerAdapter.getCount()];
+			Object[][] conversationsArr = new Object[pagerAdapter.getCount()][2];
 			for (int i = 0; i < pagerAdapter.getCount(); i++) {
-				conversationsArr[i] = pagerAdapter.getPageTitle(i);
+				conversationsArr[i] = new Object[] {pagerAdapter.getPageTitle(i), pagerAdapter.getColorAt(i)};
 			}
 
 			OnClickListener listener = new OnClickListener() {
@@ -685,7 +710,16 @@ public class ConversationActivity extends SherlockActivity implements
 				}
 			};
 
-			builder.setItems(conversationsArr, listener);
+			builder.setAdapter(new ArrayAdapter<Object[]>(this, android.R.layout.select_dialog_item, conversationsArr) {
+					@Override
+					public View getView(int position, View convertView, ViewGroup parent) {
+							TextView view = (TextView) super.getView(position, convertView, parent);
+							Object[] info = getItem(position);
+							view.setText((String) info[0]);
+							view.setTextColor((Integer) info[1]);
+							return view;
+					}
+			}, listener);
 			builder.show();
 
 			break;

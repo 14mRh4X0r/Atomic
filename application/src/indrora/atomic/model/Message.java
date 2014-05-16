@@ -35,6 +35,7 @@ import android.os.Build;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
+import android.text.format.DateFormat;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.text.util.Linkify;
@@ -424,30 +425,7 @@ public class Message
      */
     public String renderTimeStamp(boolean use24hFormat, boolean includeSeconds)
     {
-        Date date = new Date(timestamp);
-
-        int hours = date.getHours();
-        int minutes = date.getMinutes();
-        int seconds = date.getSeconds();
-
-        if (!use24hFormat) {
-            hours = Math.abs(12 - hours);
-            if (hours == 12) {
-                hours = 0;
-            }
-        }
-
-        if (includeSeconds) {
-            return String.format(
-                "[%02d:%02d:%02d]",
-                hours,
-                minutes,
-                seconds);
-        } else {
-            return String.format(
-                "[%02d:%02d]",
-                hours,
-                minutes);
-        }
+        String format = "[" + (use24hFormat ? "HH" : "hh") + ":mm" + (includeSeconds ? ":ss" : "" ) + "]";
+        return (String) DateFormat.format(format, timestamp);
     }
 }
