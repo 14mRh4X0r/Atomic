@@ -840,8 +840,11 @@ public class ConversationActivity extends Activity implements
             .getCount()];
         for( int i = 0; i < pagerAdapter.getCount(); i++ ) {
           Conversation c = pagerAdapter.getItem(i);
-          CharSequence title = (c.getName().equals("") ? server.getTitle() : c
+          SpannableString chan = new SpannableString(c.getName().equals("") ? server.getTitle() : c
               .getName());
+          chan.setSpan(new ForegroundColorSpan(pagerAdapter.getColorAt(i)), 0, chan.length(),
+              SpannableString.SPAN_INCLUSIVE_INCLUSIVE);
+          CharSequence title = chan;
           if( c.getNewMentions() > 0 ) {
             SpannableString unread = new SpannableString("("
                 + c.getNewMentions() + ")");
@@ -849,7 +852,7 @@ public class ConversationActivity extends Activity implements
                 new ForegroundColorSpan(getResources().getColor(
                     android.R.color.secondary_text_dark_nodisable)), 0,
                 unread.length(), SpannableString.SPAN_INCLUSIVE_INCLUSIVE);
-            title = TextUtils.concat(title, " ", unread);
+            title = TextUtils.concat(chan, " ", unread);
           }
           conversationsArr[i] = title;
         }
